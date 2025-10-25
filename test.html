@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Eburon — CSR Playground • 4 Layout Drawings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0e0f12; --panel:#14171c; --line:#273142; --fg:#e9edf3; --muted:#98a6bb;
+      --left:#18212c; --center:#11161d; --right:#18212c; --badge:#0c1118;
+      --accent:#4ea1ff; --good:#3ddc97; --warn:#ffb454;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.35 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+    .wrap{max-width:1200px;margin:24px auto;padding:0 16px}
+    h1{font-size:18px;margin:0 0 12px 0}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .card{
+      border:1px solid var(--line);border-radius:12px;padding:12px;background:linear-gradient(180deg,#0f141b,#0b0f15);
+      box-shadow:0 8px 24px rgba(0,0,0,.35);
+    }
+    .title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .badge{font-size:11px;color:#cfe3ff;background:var(--badge);border:1px solid var(--line);padding:2px 8px;border-radius:999px}
+    .sketch{
+      border:1px dashed var(--line);
+      border-radius:10px;
+      height:360px;
+      display:grid;
+      grid-template-rows:44px 1fr;
+      overflow:hidden;
+      background:#0b0f14;
+    }
+    .topbar{display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid var(--line);background:#0d1218}
+    .logo{width:16px;height:16px;border-radius:5px;background:radial-gradient(70% 70% at 30% 30%, #6ee7ff 0%, #4ea1ff 50%, #214a8d 100%)}
+    .toptext{font-size:12px;color:#c7d5ea}
+    .grid{
+      display:grid;
+      grid-template-columns: 280px 1fr 320px;
+      gap:0;
+      height:100%;
+    }
+    .left{background:var(--left);border-right:1px solid var(--line);display:flex;flex-direction:column}
+    .center{background:var(--center);display:flex;align-items:center;justify-content:center}
+    .right{background:var(--right);border-left:1px solid var(--line);display:flex;flex-direction:column}
+    .sec{padding:8px;border-bottom:1px dashed var(--line)}
+    .sec h3{margin:0 0 6px 0;font-size:12px;color:#cfe3ff}
+    .item{font-size:11px;color:var(--muted);padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:#0e141b;margin:4px 0}
+    .center-note{
+      font-size:12px;color:#c9d7ea;border:1px dashed var(--line);background:#0e141a;padding:8px 10px;border-radius:8px
+    }
+    .dial{
+      padding:8px;
+    }
+    .dial .row3{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px
+    }
+    .key{background:#111925;border:1px solid var(--line);padding:10px 0;border-radius:8px;text-align:center;font-weight:700}
+    /* Collapsed illusions */
+    .left.collapsed{width:0;display:none}
+    .right.collapsed{width:0;display:none}
+    /* Labels */
+    .label{
+      position:absolute; top:8px; right:8px; font-size:11px; color:#9fb3ce;
+      background:#0c1118;border:1px solid var(--line);padding:2px 6px;border-radius:6px
+    }
+    .rel{position:relative}
+    /* Legends */
+    .legend{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:#a9b9cc;margin-top:8px}
+    .chip{border:1px solid var(--line);background:#0b1118;color:#cfe3ff;border-radius:999px;padding:2px 8px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Eburon — CSR Playground • Static Layout Drawings (4 States)</h1>
+    <div class="legend">
+      <span class="chip">Left = Navigation (My Agents / Templates / Voices / Clone Voice / Flow)</span>
+      <span class="chip">Center = Content / Editors / Previews</span>
+      <span class="chip">Right = Dialer (Ring → IVR → 8s Timeout → Busy)</span>
+    </div>
+
+    <!-- ROW 1: (1) Full Expanded  |  (2) Left Collapsed -->
+    <div class="row" style="margin-top:14px">
+      <!-- 1) FULL (Left + Right Expanded) -->
+      <div class="card rel">
+        <div class="title">
+          <div>1) Full — Left & Right Expanded</div>
+          <span class="badge">State #1</span>
+        </div>
+        <div class="sketch">
+          <div class="topbar">
+            <div class="logo"></div><div class="toptext">Top Config: Persona / Role / Voice • Publish</div>
+          </div>
+          <div class="grid">
+            <aside class="left">
+              <div class="sec"><h3>My Agents</h3><div class="item">MyCSR Agent (Draft)</div><div class="item">+ New Agent</div></div>
+              <div class="sec"><h3>Templates (20)</h3><div class="item">Airline Concierge — Premium</div><div class="item">Banking — KYC</div><div class="item">…</div></div>
+              <div class="sec"><h3>Voices</h3><div class="item">All / My Voices</div></div>
+              <div class="sec"><h3>Clone Voice</h3><div class="item">Upload sample</div></div>
+              <div class="sec"><h3>Flow — IVR</h3><div class="item">Airline — Basic IVR (Active)</div></div>
+            </aside>
+            <section class="center">
+              <div class="center-note">Center: Select an Agent/Template to edit, or attach a Flow to test with Dialer.</div>
+            </section>
+            <aside class="right">
+              <div class="sec"><h3>Dialer</h3><div class="item">Number / Status / Timer</div></div>
+              <div class="dial">
+                <div class="item">Ring (5s) → IVR Menu → 8s Timeout → Busy</div>
+                <div class="row3">
+                  <div class="key">1</div><div class="key">2</div><div class="key">3</div>
+                  <div class="key">4</div><div class="key">5</div><div class="key">6</div>
+                  <div class="key">7</div><div class="key">8</div><div class="key">9</div>
+                  <div class="key">*</div><div class="key">0</div><div class="key">#</div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+        <div class="label">Both Expanded</div>
+      </div>
+
+      <!-- 2) LEFT COLLAPSED -->
+      <div class="card rel">
+        <div class="title">
+          <div>2) Left Collapsed (Right Expanded)</div>
+          <span class="badge">State #2</span>
+        </div>
+        <div class="sketch">
+          <div class="topbar">
+            <div class="logo"></div><div class="toptext">Top Config: Persona / Role / Voice • Publish</div>
+          </div>
+          <div class="grid">
+            <aside class="left collapsed"></aside>
+            <section class="center" style="grid-column:1 / span 2">
+              <div class="center-note">Center: Focus on content while keeping Dialer visible for quick tests.</div>
+            </section>
+            <aside class="right">
+              <div class="sec"><h3>Dialer</h3><div class="item">Number / Status / Timer</div></div>
+              <div class="dial">
+                <div class="item">Ring (5s) → IVR Menu → 8s Timeout → Busy</div>
+                <div class="row3">
+                  <div class="key">1</div><div class="key">2</div><div class="key">3</div>
+                  <div class="key">4</div><div class="key">5</div><div class="key">6</div>
+                  <div class="key">7</div><div class="key">8</div><div class="key">9</div>
+                  <div class="key">*</div><div class="key">0</div><div class="key">#</div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+        <div class="label">Left Collapsed</div>
+      </div>
+    </div>
+
+    <!-- ROW 2: (3) Right Collapsed | (4) Both Collapsed -->
+    <div class="row" style="margin-top:16px">
+      <!-- 3) RIGHT COLLAPSED -->
+      <div class="card rel">
+        <div class="title">
+          <div>3) Right Collapsed (Left Expanded)</div>
+          <span class="badge">State #3</span>
+        </div>
+        <div class="sketch">
+          <div class="topbar">
+            <div class="logo"></div><div class="toptext">Top Config: Persona / Role / Voice • Publish</div>
+          </div>
+          <div class="grid">
+            <aside class="left">
+              <div class="sec"><h3>My Agents</h3><div class="item">MyCSR Agent (Draft)</div><div class="item">+ New Agent</div></div>
+              <div class="sec"><h3>Templates (20)</h3><div class="item">Airline Concierge — Premium</div><div class="item">Banking — KYC</div><div class="item">…</div></div>
+              <div class="sec"><h3>Voices</h3><div class="item">All / My Voices</div></div>
+              <div class="sec"><h3>Clone Voice</h3><div class="item">Upload sample</div></div>
+              <div class="sec"><h3>Flow — IVR</h3><div class="item">Retail — Returns (Draft)</div></div>
+            </aside>
+            <section class="center" style="grid-column:2 / span 2">
+              <div class="center-note">Center: More room for editing agents/templates/flows. Dialer hidden.</div>
+            </section>
+            <aside class="right collapsed"></aside>
+          </div>
+        </div>
+        <div class="label">Right Collapsed</div>
+      </div>
+
+      <!-- 4) BOTH COLLAPSED -->
+      <div class="card rel">
+        <div class="title">
+          <div>4) Both Collapsed (Focus Mode)</div>
+          <span class="badge">State #4</span>
+        </div>
+        <div class="sketch">
+          <div class="topbar">
+            <div class="logo"></div><div class="toptext">Top Config: Persona / Role / Voice • Publish</div>
+          </div>
+          <div class="grid">
+            <aside class="left collapsed"></aside>
+            <section class="center" style="grid-column:1 / span 3">
+              <div class="center-note">Center: Full-width. Use when focusing on a long form or transcript.</div>
+            </section>
+            <aside class="right collapsed"></aside>
+          </div>
+        </div>
+        <div class="label">Both Collapsed</div>
+      </div>
+    </div>
+
+    <!-- Implementation notes for your team (kept minimal, no provider names in UI) -->
+    <div class="card" style="margin-top:18px">
+      <div class="title">
+        <div>Notes (targets you mentioned)</div>
+        <span class="badge">Spec</span>
+      </div>
+      <ul style="margin:0;padding-left:18px;color:#c9d6e6;font-size:13px;line-height:1.6">
+        <li>Left Nav sections (top→bottom): <strong>My Agents</strong>, <strong>Templates (20, editable)</strong>, <strong>Voices</strong>, <strong>Clone Voice</strong>, <strong>Flow — IVR</strong>.</li>
+        <li>Top config (always visible): <em>PersonaName</em>, <em>Role</em>, <em>Description</em> (can be in center during edit), <em>Voice</em>, and <em>Publish</em> button.</li>
+        <li>Right Dialer flow: <code>Ring (5s) → IVR Menu (wait 8s for DTMF) → Busy tone if none → End</code>. DTMF keys visible.</li>
+        <li>UI branding shows only <strong>Eburon</strong>. Provider names are hidden (route via server later).</li>
+        <li>Audio sources: wire later to your Supabase URLs (ring / hold / busy). For now these are just schematic drawings.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
