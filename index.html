@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Eburon — CSR Playground (Standalone Mock)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <style>
+    :root{
+      --bg:#0e0f12; --panel:#14171c; --panel-2:#161a20; --muted:#7c8594; --fg:#e9edf3;
+      --accent:#4ea1ff; --accent-2:#6ee7ff; --ok:#3ddc97; --warn:#ffb454; --bad:#ff5b5b;
+      --line:#232934; --chip:#1b2028; --ink:#0b0e12;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:linear-gradient(180deg,var(--bg),#0a0c0f 60%), var(--bg);
+      color:var(--fg); font:14px/1.35 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+      overflow:hidden;
+    }
+    a{color:inherit;text-decoration:none}
+    .row{display:flex;gap:.75rem;align-items:center}
+    .btn{padding:.55rem .8rem;border:1px solid var(--line);background:var(--chip);border-radius:.5rem;cursor:pointer}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{background:linear-gradient(180deg,var(--accent),#377cfb);border-color:#2b67d9;color:#0b111a;font-weight:600}
+    .btn.ghost{background:transparent}
+    .btn.warn{background:linear-gradient(180deg,#ffcf70,#ffae42);border-color:#e1902f;color:#251400}
+    .btn.ok{background:linear-gradient(180deg,#58f9c9,#1ee3a2);border-color:#12c08c;color:#00251c}
+    .tag{padding:.15rem .5rem;border:1px solid var(--line);border-radius:.5rem;background:var(--chip);color:var(--muted)}
+    .chip{padding:.35rem .6rem;border:1px solid var(--line);border-radius:999px;background:var(--chip);color:#c9d2df}
+    .divider{height:1px;background:var(--line);margin:.5rem 0}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;background:#101318;border:1px solid #1b2230;border-bottom-color:#121827;padding:.1rem .35rem;border-radius:.35rem;color:#aab6c7}
+    input,select,textarea{
+      width:100%; background:var(--ink); color:var(--fg); border:1px solid var(--line); border-radius:.5rem;
+      padding:.6rem .7rem; outline:none;
+    }
+    textarea{resize:vertical; min-height:88px}
+    .label{font-size:12px;color:#aab6c7;margin-bottom:.25rem}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .small{font-size:12px;color:#9aa6b6}
+    .title{font-size:16px;font-weight:700}
+    .sub{font-size:12px;color:#9fb1c8}
+    .badge{font-size:12px;background:#0b1118;border:1px solid #1b2432;border-radius:.4rem;padding:.15rem .45rem;color:#9db1ca}
+    .pill{border-radius:999px}
+
+    /* ==== LAYOUT ======================================================== */
+    .shell{
+      height:100%; display:grid;
+      grid-template-columns: 320px 1fr 380px; /* left | center | right */
+      grid-template-rows: auto 1fr;
+      grid-template-areas:
+        "top top top"
+        "left center right";
+      gap:0;
+    }
+    .topbar{
+      grid-area:top; border-bottom:1px solid var(--line); background:linear-gradient(180deg,#0d1218,#0b0f15);
+      padding:.65rem .9rem; display:flex; gap:.75rem; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:10;
+    }
+    .top-left{display:flex;gap:.6rem;align-items:center}
+    .brand{display:flex;gap:.55rem;align-items:center}
+    .logo{width:20px;height:20px;border-radius:6px;background:radial-gradient(65% 65% at 30% 30%, var(--accent-2) 0%, var(--accent) 40%, #214a8d 100%); box-shadow:0 0 0 1px #1a2a44}
+    .titlebar{display:flex;flex-direction:column}
+    .titlebar .h{font-size:14px;font-weight:800;letter-spacing:.2px}
+    .titlebar .s{font-size:11px;color:#89a0ba}
+
+    .left{grid-area:left; border-right:1px solid var(--line); background:var(--panel); height:calc(100vh - 48px); overflow:auto}
+    .center{grid-area:center; height:calc(100vh - 48px); overflow:hidden; position:relative; background:var(--panel-2)}
+    .right{grid-area:right; border-left:1px solid var(--line); background:var(--panel); height:calc(100vh - 48px); overflow:auto}
+
+    /* Collapsed states */
+    .collapsed-left { grid-template-columns: 0px 1fr 380px; }
+    .collapsed-right{ grid-template-columns: 320px 1fr 0px; }
+    .collapsed-both { grid-template-columns: 0px 1fr 0px; }
+    .left.hidden, .right.hidden{ display:none }
+
+    /* ==== LEFT NAV ===================================================== */
+    .nav-sec{padding:.8rem}
+    .nav-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem}
+    .nav-items{display:flex;flex-direction:column;gap:.35rem}
+    .nav-item{padding:.5rem .55rem;border-radius:.5rem;border:1px solid transparent;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+    .nav-item:hover{background:#0f141b;border-color:#1a2330}
+    .nav-item.active{background:linear-gradient(180deg,#0f1722,#0e1621);border-color:#1c2a3e;box-shadow:inset 0 0 0 1px #1f2e45}
+    .nav-item .meta{color:#9cb0c9;font-size:11px}
+    .bottom-fixed{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,rgba(14,16,20,.75));padding:.7rem;border-top:1px solid var(--line);backdrop-filter:blur(6px);display:flex;gap:.5rem}
+
+    /* ==== CENTER (WEBVIEW + CHAT OVERLAY) ============================== */
+    .center .welcome{position:absolute; inset:0; display:flex; align-items:center; justify-content:center}
+    .card{
+      width:min(940px,92vw); background:linear-gradient(180deg,#0e131a,#0b0f15); border:1px solid #1a2432; border-radius:16px; padding:1rem;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem}
+    .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .action{padding:.9rem;border:1px solid #1a2432;border-radius:.75rem;background:#0c1118;cursor:pointer;text-align:center}
+    .action:hover{background:#0e141c}
+    .scroll{overflow:auto;max-height:calc(100vh - 48px)}
+
+    /* floating mini chat composer (for future use) */
+    .dock{
+      position:absolute; left:1rem; right:1rem; bottom:1rem; display:flex; gap:.5rem; align-items:flex-end;
+      background:rgba(10,14,18,.6); border:1px solid #1a2432; backdrop-filter:blur(6px); padding:.5rem; border-radius:.8rem;
+    }
+
+    /* ==== RIGHT DIALER ================================================= */
+    .dialer{padding:.8rem}
+    .dial-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem}
+    .dial-screen{border:1px solid #1b2432;background:linear-gradient(180deg,#0c1118,#0a0e14);border-radius:.8rem;padding:.75rem}
+    .dial-num{font:600 20px/1.2 ui-monospace,Menlo,Consolas;color:#bcd2ef;letter-spacing:1px}
+    .status{font-size:12px;color:#9db0c9}
+    .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-top:.5rem}
+    .key{padding:.8rem 0;background:#0f141b;border:1px solid #1a2230;border-radius:.7rem;text-align:center;cursor:pointer;font-weight:700}
+    .key:active{transform:translateY(1px)}
+    .log{margin-top:.6rem;max-height:140px;overflow:auto;border:1px dashed #243147;border-radius:.6rem;padding:.5rem;background:#0b1117}
+    .tiny{font-size:11px;color:#8ca0b7}
+    .row.spread{justify-content:space-between}
+
+    /* ==== TOGGLES ====================================================== */
+    .toggles{display:flex;gap:.35rem}
+    .toggle{border:1px solid #233045;background:#0a1017;padding:.4rem .6rem;border-radius:.5rem;cursor:pointer}
+    .toggle.active{border-color:#2b67d9;background:#0b1422;box-shadow:inset 0 0 0 1px #2b67d9}
+
+    /* ==== IVR Flow list (simple) ====================================== */
+    .flow-list{display:flex;flex-direction:column;gap:.4rem}
+    .flow-item{padding:.5rem;border:1px solid #1a2432;border-radius:.6rem;display:flex;justify-content:space-between;align-items:center;background:#0c1118}
+    .flow-item .mini{font-size:12px;color:#93a8c4}
+    .kbdrow{display:flex;gap:.3rem;flex-wrap:wrap}
+    .muted{color:#93a1b2}
+    .note{background:#10161f;border:1px solid #1c2737;border-radius:.6rem;padding:.5rem}
+    @media (max-width:1100px){
+      .shell{grid-template-columns: 280px 1fr 340px}
+    }
+    @media (max-width:900px){
+      .shell{grid-template-columns: 0 1fr 0}
+      .left,.right{display:none}
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app" class="shell">
+    <!-- ===== TOP BAR: Agent Config (Persona / Role / Voice / Prompt) ===== -->
+    <div class="topbar">
+      <div class="top-left">
+        <div class="brand">
+          <div class="logo"></div>
+          <div class="titlebar">
+            <div class="h">Eburon — CSR Playground</div>
+            <div class="s">Standalone mock • Collapsible Left (My Agents / Templates / Voices / Clone Voice / Flow) & Right (Dialer)</div>
+          </div>
+        </div>
+        <span class="badge">Preview</span>
+      </div>
+
+      <div class="row" style="gap:.6rem;flex:1;justify-content:flex-end">
+        <!-- Primary agent quick-config (always visible) -->
+        <div class="row" style="gap:.4rem;background:#0b1118;border:1px solid #1a2432;border-radius:.6rem;padding:.35rem .5rem">
+          <span class="small" style="padding:.2rem .35rem">Persona:</span>
+          <input id="personaName" style="width:180px" value="MyCSR Agent" />
+          <span class="small" style="padding:.2rem .35rem">Role:</span>
+          <select id="personaRole" style="width:160px">
+            <option>CSR</option><option>Support</option><option>Sales</option><option>Concierge</option><option>Custom</option>
+          </select>
+          <span class="small" style="padding:.2rem .35rem">Voice:</span>
+          <select id="personaVoice" style="width:200px"></select>
+        </div>
+        <button class="btn ok" id="publishBtn">Publish Agent</button>
+        <div class="toggles">
+          <button class="toggle" id="toggleLeft">◀ Left</button>
+          <button class="toggle" id="toggleRight">Right ▶</button>
+          <button class="toggle" id="toggleBoth">⟂ Collapse Both</button>
+          <button class="toggle" id="toggleNone" title="Expand both">⟂ Expand Both</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== LEFT NAV: My Agents / Templates / Voices / Clone Voice / Flow ==== -->
+    <aside id="left" class="left">
+      <!-- My Agents -->
+      <div class="nav-sec">
+        <div class="nav-head">
+          <div class="title">My Agents</div>
+          <span class="tag">Draft</span>
+        </div>
+        <div class="nav-items" id="agentsList">
+          <!-- populated by JS -->
+        </div>
+      </div>
+      <div class="divider"></div>
+
+      <!-- Templates (20, editable) -->
+      <div class="nav-sec">
+        <div class="nav-head">
+          <div class="title">Templates</div>
+          <button class="btn small" id="browseTemplates">Open Gallery</button>
+        </div>
+        <div id="templatesList" class="nav-items"></div>
+      </div>
+      <div class="divider"></div>
+
+      <!-- Voices (All / My Voices tabs) -->
+      <div class="nav-sec">
+        <div class="nav-head">
+          <div class="title">Voices</div>
+          <div class="row">
+            <button class="btn ghost small" id="tabAllVoices">All</button>
+            <button class="btn ghost small" id="tabMyVoices">My Voices</button>
+          </div>
+        </div>
+        <div id="voicesList" class="nav-items"></div>
+      </div>
+      <div class="divider"></div>
+
+      <!-- Clone Voice -->
+      <div class="nav-sec">
+        <div class="nav-head">
+          <div class="title">Clone Voice</div>
+        </div>
+        <div class="note small">
+          Upload a short 60–90s sample. <span class="muted">Demo only — UI placeholder.</span>
+          <div class="row" style="margin-top:.5rem">
+            <input type="file" id="cloneInput" accept="audio/*" />
+            <button class="btn">Submit</button>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+
+      <!-- Flow (IVR Flow Builder) -->
+      <div class="nav-sec">
+        <div class="nav-head">
+          <div class="title">Flow — IVR</div>
+          <button class="btn small" id="newFlow">New</button>
+        </div>
+        <div class="flow-list" id="flowList"></div>
+        <div class="note small" style="margin-top:.5rem">
+          Attach a flow to Dialer via <span class="kbd">Active Flow</span> selector inside Dialer.
+        </div>
+      </div>
+
+      <!-- Bottom action bar -->
+      <div class="bottom-fixed">
+        <button class="btn" id="importBtn">Import</button>
+        <button class="btn" id="exportBtn">Export</button>
+      </div>
+    </aside>
+
+    <!-- ===== CENTER: Welcome / Details / Editors / Previews =================== -->
+    <main id="center" class="center">
+      <div class="welcome scroll" id="centerWelcome">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:.6rem">
+            <div class="row" style="gap:.5rem;align-items:center">
+              <div class="title">Welcome to <span class="chip">Eburon CSR Playground</span></div>
+              <span class="sub">Select an item on the left or place a call on the right.</span>
+            </div>
+            <div class="row" style="gap:.4rem">
+              <button class="btn primary" id="quickNewAgent">New Agent</button>
+              <button class="btn" id="quickTemplates">Browse Templates</button>
+              <button class="btn" id="quickVoices">Voices</button>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="grid g3" style="margin-top:.6rem">
+            <div class="action" id="actEditPersona">Edit Persona</div>
+            <div class="action" id="actTryDialer">Open Dialer</div>
+            <div class="action" id="actAttachFlow">Attach Flow</div>
+          </div>
+          <div class="divider" style="margin:.7rem 0"></div>
+          <div class="row" style="gap:.6rem;flex-wrap:wrap">
+            <span class="badge pill">Tip</span>
+            <span class="small">Use toggles on the top-right to visualize the 4 layout states:</span>
+            <span class="kbd">Full</span>
+            <span class="kbd">Left Collapsed</span>
+            <span class="kbd">Right Collapsed</span>
+            <span class="kbd">Both Collapsed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic details surface -->
+      <div class="scroll" id="centerPane" style="display:none;padding:1rem">
+        <!-- populated dynamically -->
+      </div>
+
+      <!-- (Optional) floating chat dock skeleton -->
+      <div class="dock" id="dock" style="display:none">
+        <input id="dockInput" placeholder="Type /dtmf 1..9,0,*,# or a note..." />
+        <button class="btn" id="dockSend">Send</button>
+      </div>
+    </main>
+
+    <!-- ===== RIGHT: Dialer Simulator ======================================== -->
+    <aside id="right" class="right">
+      <div class="dialer">
+        <div class="dial-head">
+          <div class="title">Dialer</div>
+          <div class="row">
+            <select id="activeFlowSel" title="Active Flow"></select>
+            <button class="btn" id="toggleMute">Mute</button>
+          </div>
+        </div>
+
+        <div class="dial-screen">
+          <div class="row spread">
+            <div>
+              <div class="small">Number</div>
+              <div class="dial-num" id="num">—</div>
+            </div>
+            <div style="text-align:right">
+              <div class="small">Status</div>
+              <div class="status" id="status">idle</div>
+            </div>
+          </div>
+
+          <div class="row" style="gap:.4rem;margin:.6rem 0">
+            <input id="numInput" placeholder="Enter number…" style="flex:1" />
+            <button class="btn ok" id="callBtn">Call</button>
+            <button class="btn warn" id="hangBtn">Hangup</button>
+          </div>
+
+          <div class="pad" id="pad">
+            <!-- keys populated by JS -->
+          </div>
+
+          <div class="row" style="gap:.4rem;margin-top:.6rem">
+            <span class="badge" id="timer">00:00</span>
+            <span class="badge">DTMF</span>
+            <div class="kbdrow" id="dtmfEcho"></div>
+          </div>
+
+          <div class="log" id="log"></div>
+
+          <div class="note tiny" style="margin-top:.5rem">
+            Flow: Ring 5s → IVR menu → 8s input timeout → Busy tone → End.
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    /* ===========================================================
+       E B U R O N   C S R   P L A Y G R O U N D   ( S T A N D A L O N E )
+       Pure HTML/CSS/JS mock; hardcoded data + WebAudio tones.
+       UI shows ONLY "Eburon". Do not surface provider names.
+
+       NOTE for future integration:
+       - Voices will be fetched server-side via your API proxy.
+       - Place your voice provider credentials server-side only.
+       - You asked to show a placeholder in code:
+         const BLAND_API_KEY = "PLACE_YOUR_BLAND_API_KEY_HERE"; // <- do not ship to browser
+       =========================================================== */
+
+    // ---------- State ----------
+    const state = {
+      leftOpen: true,
+      rightOpen: true,
+      muted: false,
+      activeFlowId: 'default-airline',
+      dtmfBuffer: [],
+      call: {
+        status: 'idle', // 'idle'|'dialing'|'ringing'|'ivr'|'in-call'|'busy'|'ended'
+        startedAt: 0,
+        timerId: null,
+        ringTimeout: null,
+        ivrTimeout: null,
+        number: '',
+      },
+      agents: [
+        { id:'agent-001', name:'MyCSR Agent', role:'CSR',
+          description:'General CSR persona with empathy + verification + resolution steps.',
+          voice:'Eburon Voice 01', status:'Draft' }
+      ],
+      // Hardcoded "All Voices" list (UI label: Eburon Voices)
+      voicesAll: Array.from({length:16}).map((_,i)=>{
+        const n = (i+1).toString().padStart(2,'0');
+        return { id:'voice-'+n, name:'Eburon Voice '+n, locale:'en', tags:['office','clean'] }
+      }),
+      voicesMine: [{ id:'voice-01', name:'Eburon Voice 01', locale:'en', tags:['office','clean','my'] }],
+      // 20 Templates (editable)
+      templates: [
+        {id:'t1', name:'Airline Concierge — Premium', industry:'Aviation', tone:'warm, efficient', langs:['en','tr']},
+        {id:'t2', name:'E-Commerce Support — Returns', industry:'Retail', tone:'upbeat, reassuring', langs:['en']},
+        {id:'t3', name:'Banking CSR — KYC & Balance', industry:'Banking', tone:'formal, precise', langs:['en']},
+        {id:'t4', name:'Telco Care — Outage & Billing', industry:'Telco', tone:'calm, apologetic', langs:['en']},
+        {id:'t5', name:'Healthcare Frontdesk — Appointments', industry:'Healthcare', tone:'caring, clear', langs:['en']},
+        {id:'t6', name:'Insurance Claims — First Notice', industry:'Insurance', tone:'steady, thorough', langs:['en']},
+        {id:'t7', name:'Travel OTA — Rebooking', industry:'Travel', tone:'solution-oriented', langs:['en']},
+        {id:'t8', name:'Logistics — Delivery Status', industry:'Logistics', tone:'concise, proactive', langs:['en']},
+        {id:'t9', name:'Utilities — Meter & Payment', industry:'Utilities', tone:'direct, respectful', langs:['en']},
+        {id:'t10', name:'Gov Service Desk — Forms', industry:'Public', tone:'neutral, guiding', langs:['en']},
+        {id:'t11', name:'Hospitality — Reservations', industry:'Hospitality', tone:'warm, polished', langs:['en']},
+        {id:'t12', name:'EdTech Support — Access', industry:'Education', tone:'encouraging', langs:['en']},
+        {id:'t13', name:'SaaS Support — Password Reset', industry:'Software', tone:'crisp, friendly', langs:['en']},
+        {id:'t14', name:'SaaS Billing — Refunds & Credits', industry:'Software', tone:'fair, transparent', langs:['en']},
+        {id:'t15', name:'Food Delivery — Order Issues', industry:'FoodTech', tone:'quick, empathetic', langs:['en']},
+        {id:'t16', name:'Automotive — Service Booking', industry:'Automotive', tone:'professional', langs:['en']},
+        {id:'t17', name:'Real Estate — Viewing Scheduler', industry:'Real Estate', tone:'courteous', langs:['en']},
+        {id:'t18', name:'Recruitment — Candidate Screening', industry:'HR/Staffing', tone:'objective, polite', langs:['en']},
+        {id:'t19', name:'CyberSec — Incident Intake', industry:'Security', tone:'composed, exact', langs:['en']},
+        {id:'t20', name:'Banking — Collections (Soft)', industry:'Banking', tone:'firm, respectful', langs:['en']},
+      ],
+      flows: [
+        {
+          id:'default-airline', name:'Airline — Basic IVR',
+          ivrText: 'Welcome to Eburon Airline. For Flights press 1, for Booking press 2. To repeat, press 9.',
+          branches: {
+            '1':'Flights — status, changes, assistance.',
+            '2':'Booking — new tickets, invoice, refunds.',
+            '9':'Repeat the menu.'
+          }
+        },
+        {
+          id:'retail-returns', name:'Retail — Returns IVR',
+          ivrText:'Welcome to Eburon Commerce. For Returns press 1, for Orders press 2.',
+          branches:{'1':'Returns flow','2':'Orders flow'}
+        }
+      ]
+    };
+
+    // Fill Persona voice dropdown
+    const personaVoiceSel = document.getElementById('personaVoice');
+    function refreshPersonaVoices(){
+      personaVoiceSel.innerHTML = '';
+      [...state.voicesAll].forEach(v=>{
+        const o = document.createElement('option');
+        o.value = v.name; o.textContent = v.name;
+        if(v.name === 'Eburon Voice 01') o.selected = true;
+        personaVoiceSel.appendChild(o);
+      });
+    }
+
+    // ---------- Left Nav Rendering ----------
+    const agentsList = document.getElementById('agentsList');
+    function renderAgents(){
+      agentsList.innerHTML = '';
+      state.agents.forEach(a=>{
+        const el = document.createElement('div');
+        el.className = 'nav-item';
+        el.innerHTML = `<div><div>${a.name}</div><div class="meta">${a.role} • ${a.voice}</div></div><span class="badge">${a.status}</span>`;
+        el.onclick = ()=> openAgentEditor(a.id);
+        agentsList.appendChild(el);
+      });
+      const add = document.createElement('div');
+      add.className = 'nav-item';
+      add.innerHTML = `<div><div>+ New Agent</div><div class="meta">Add a fresh config</div></div><span class="tag">Add</span>`;
+      add.onclick = newAgent;
+      agentsList.appendChild(add);
+    }
+
+    const templatesList = document.getElementById('templatesList');
+    function renderTemplates(){
+      templatesList.innerHTML = '';
+      state.templates.forEach(t=>{
+        const el = document.createElement('div');
+        el.className = 'nav-item';
+        el.innerHTML = `<div><div>${t.name}</div><div class="meta">${t.industry} • ${t.tone}</div></div><span class="badge">${t.langs.join(',')}</span>`;
+        el.onclick = ()=> openTemplateEditor(t.id);
+        templatesList.appendChild(el);
+      });
+    }
+
+    const voicesList = document.getElementById('voicesList');
+    let voicesTab = 'all';
+    function renderVoices(){
+      voicesList.innerHTML = '';
+      const src = voicesTab === 'all' ? state.voicesAll : state.voicesMine;
+      src.forEach(v=>{
+        const el = document.createElement('div');
+        el.className = 'nav-item';
+        el.innerHTML = `<div><div>${v.name}</div><div class="meta">${v.locale} • ${v.tags.join(', ')}</div></div>
+                        <button class="btn small">Preview</button>`;
+        el.querySelector('button').onclick = (e)=>{ e.stopPropagation(); playVoiceSample(v.id) };
+        el.onclick = ()=> selectVoice(v);
+        voicesList.appendChild(el);
+      });
+    }
+
+    const flowList = document.getElementById('flowList');
+    function renderFlows(){
+      flowList.innerHTML = '';
+      state.flows.forEach(f=>{
+        const active = state.activeFlowId === f.id;
+        const el = document.createElement('div');
+        el.className = 'flow-item';
+        el.innerHTML = `<div>
+            <div>${f.name}</div>
+            <div class="mini">${f.ivrText}</div>
+          </div>
+          <div class="row">
+            <button class="btn small ${active?'primary':''}">${active?'Active':'Activate'}</button>
+            <button class="btn small">Edit</button>
+          </div>`;
+        const [activateBtn, editBtn] = el.querySelectorAll('button');
+        activateBtn.onclick = ()=>{ state.activeFlowId = f.id; renderFlows(); refreshActiveFlowSelect(); toast('Flow attached to Dialer'); };
+        editBtn.onclick = ()=> openFlowEditor(f.id);
+        flowList.appendChild(el);
+      });
+    }
+
+    // ---------- Center Pane Editors ----------
+    const centerPane = document.getElementById('centerPane');
+    const centerWelcome = document.getElementById('centerWelcome');
+
+    function openAgentEditor(id){
+      const a = state.agents.find(x=>x.id===id);
+      if(!a) return;
+      centerWelcome.style.display='none'; centerPane.style.display='block';
+      centerPane.innerHTML = `
+      <div class="card" style="margin:0 auto">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div class="row" style="gap:.5rem;align-items:center">
+            <div class="title">${a.name}</div>
+            <span class="badge">${a.status}</span>
+          </div>
+          <div class="row" style="gap:.4rem">
+            <button class="btn" id="agentTry">Try in Dialer</button>
+            <button class="btn ok" id="agentPublish">Publish</button>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="grid g2">
+          <div>
+            <div class="label">Persona Name</div>
+            <input id="aName" value="${a.name}">
+          </div>
+          <div>
+            <div class="label">Role</div>
+            <select id="aRole">
+              ${['CSR','Support','Sales','Concierge','Custom'].map(r=>`<option ${a.role===r?'selected':''}>${r}</option>`).join('')}
+            </select>
+          </div>
+          <div style="grid-column:1/-1">
+            <div class="label">Description</div>
+            <textarea id="aDesc">${a.description}</textarea>
+          </div>
+          <div>
+            <div class="label">Voice (Eburon Voices)</div>
+            <select id="aVoice">${state.voicesAll.map(v=>`<option ${a.voice===v.name?'selected':''}>${v.name}</option>`).join('')}</select>
+          </div>
+          <div>
+            <div class="label">System Prompt (prebuilt, editable)</div>
+            <textarea id="aPrompt">You are an Eburon CSR agent. Greet, verify, resolve, confirm next steps. Be clear and warm.</textarea>
+          </div>
+        </div>
+      </div>`;
+      document.getElementById('agentTry').onclick = ()=> { openRight(); toast('Opening Dialer…'); };
+      document.getElementById('agentPublish').onclick = ()=> { a.name=document.getElementById('aName').value; a.role=document.getElementById('aRole').value; a.description=document.getElementById('aDesc').value; a.voice=document.getElementById('aVoice').value; renderAgents(); toast('Agent published'); };
+    }
+
+    function openTemplateEditor(id){
+      const t = state.templates.find(x=>x.id===id);
+      if(!t) return;
+      centerWelcome.style.display='none'; centerPane.style.display='block';
+      centerPane.innerHTML = `
+      <div class="card" style="margin:0 auto">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div class="row" style="gap:.5rem;align-items:center">
+            <div class="title">${t.name}</div>
+            <span class="badge">Eburon CSR Template</span>
+          </div>
+          <div class="row" style="gap:.4rem">
+            <button class="btn" id="applyTemplate">Use Template</button>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="grid g2">
+          <div>
+            <div class="label">Display Name</div>
+            <input id="tName" value="${t.name}">
+          </div>
+          <div>
+            <div class="label">Industry</div>
+            <input id="tInd" value="${t.industry}">
+          </div>
+          <div>
+            <div class="label">Tone</div>
+            <input id="tTone" value="${t.tone}">
+          </div>
+          <div>
+            <div class="label">Languages</div>
+            <input id="tLangs" value="${t.langs.join(',')}">
+          </div>
+          <div style="grid-column:1/-1">
+            <div class="label">IVR Script</div>
+            <textarea id="tIvr">Welcome to Eburon. For option 1 press 1, option 2 press 2. Repeat with 9.</textarea>
+          </div>
+          <div style="grid-column:1/-1">
+            <div class="label">System Prompt</div>
+            <textarea id="tPrompt">You are an Eburon CSR agent specialized in ${t.industry}. Follow: Acknowledge → Verify → Solve → Confirm.</textarea>
+          </div>
+        </div>
+      </div>`;
+      document.getElementById('applyTemplate').onclick = ()=>{
+        // Prefill active agent with template meta (simple demo)
+        const a = state.agents[0];
+        a.name = document.getElementById('tName').value + ' — Agent';
+        a.description = 'Based on template: ' + document.getElementById('tTone').value;
+        renderAgents();
+        openAgentEditor(a.id);
+        toast('Template applied to draft agent');
+      }
+    }
+
+    function selectVoice(v){
+      document.getElementById('personaVoice').value = v.name;
+      toast('Voice selected: '+v.name);
+    }
+
+    function openFlowEditor(id){
+      const f = state.flows.find(x=>x.id===id);
+      if(!f) return;
+      centerWelcome.style.display='none'; centerPane.style.display='block';
+      centerPane.innerHTML = `
+      <div class="card" style="margin:0 auto">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div class="row" style="gap:.5rem;align-items:center">
+            <div class="title">${f.name}</div>
+            <span class="badge">IVR Flow</span>
+          </div>
+          <div class="row" style="gap:.4rem">
+            <button class="btn ok" id="saveFlow">Save</button>
+            <button class="btn" id="attachFlow">Attach to Dialer</button>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="grid g2">
+          <div style="grid-column:1/-1">
+            <div class="label">IVR Greeting</div>
+            <textarea id="fIvr">${f.ivrText}</textarea>
+          </div>
+          <div style="grid-column:1/-1">
+            <div class="label">Branches (key: text)</div>
+            <textarea id="fBranches">${Object.entries(f.branches).map(([k,v])=>`${k}: ${v}`).join('\n')}</textarea>
+          </div>
+        </div>
+      </div>`;
+      document.getElementById('saveFlow').onclick = ()=>{
+        f.ivrText = document.getElementById('fIvr').value;
+        const lines = document.getElementById('fBranches').value.split('\n').filter(Boolean);
+        const o = {}; lines.forEach(l=>{ const m = l.split(':'); if(m[0]) o[m[0].trim()] = (m.slice(1).join(':')||'').trim(); });
+        f.branches = o; renderFlows(); toast('Flow saved');
+      };
+      document.getElementById('attachFlow').onclick = ()=>{
+        state.activeFlowId = f.id; renderFlows(); refreshActiveFlowSelect(); toast('Flow attached to Dialer');
+      };
+    }
+
+    // ---------- Right / Dialer ----------
+    const logEl = document.getElementById('log');
+    const statusEl = document.getElementById('status');
+    const timerEl = document.getElementById('timer');
+    const numEl = document.getElementById('num');
+    const numInput = document.getElementById('numInput');
+    const dtmfEcho = document.getElementById('dtmfEcho');
+    const activeFlowSel = document.getElementById('activeFlowSel');
+
+    function log(msg){ const p = document.createElement('div'); p.className='tiny'; p.textContent = '› ' + msg; logEl.prepend(p); }
+    function status(s){ state.call.status=s; statusEl.textContent = s; }
+    function resetTimer(){ clearInterval(state.call.timerId); timerEl.textContent='00:00' }
+    function startTimer(){
+      state.call.startedAt = Date.now();
+      state.call.timerId = setInterval(()=>{
+        const s = Math.floor((Date.now()-state.call.startedAt)/1000);
+        const mm = String(Math.floor(s/60)).padStart(2,'0');
+        const ss = String(s%60).padStart(2,'0');
+        timerEl.textContent = mm+':'+ss;
+      },200);
+    }
+
+    // WebAudio tone gen (ring, busy, dtmf)
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ac = new AudioCtx();
+    let masterGain = ac.createGain(); masterGain.gain.value = .24; masterGain.connect(ac.destination);
+    let muted = false;
+
+    function setMuted(m){ muted = m; masterGain.gain.value = m ? 0 : .24; document.getElementById('toggleMute').textContent = m?'Unmute':'Mute'; }
+    document.getElementById('toggleMute').onclick = ()=> setMuted(!muted);
+
+    function tone(freq=440, dur=0.2){
+      const o = ac.createOscillator(); const g = ac.createGain();
+      o.type = 'sine'; o.frequency.value = freq; o.connect(g); g.connect(masterGain); g.gain.setValueAtTime(.8, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur); o.start(); o.stop(ac.currentTime + dur);
+    }
+    function dtmf(d){
+      // simple mapping (approximate)
+      const map = {'1':697+1209,'2':697+1336,'3':697+1477,'4':770+1209,'5':770+1336,'6':770+1477,'7':852+1209,'8':852+1336,'9':852+1477,'0':941+1336,'*':941+1209,'#':941+1477};
+      tone(map[d]||880, 0.14);
+    }
+    function ringStart(){
+      // cadence: 2s on / 4s off (we simulate 5s total)
+      const osc = ac.createOscillator(); const g = ac.createGain();
+      osc.type='sine'; osc.frequency.value=440; osc.connect(g); g.connect(masterGain);
+      const now=ac.currentTime;
+      g.gain.setValueAtTime(0.8, now);
+      g.gain.setValueAtTime(0.0, now+2.0);
+      osc.start(now); osc.stop(now+4.8);
+    }
+    function busyTone(){
+      // busy beeps
+      const now=ac.currentTime;
+      for(let i=0;i<6;i++){ setTimeout(()=>tone(480,0.15), i*250) }
+    }
+
+    function refreshActiveFlowSelect(){
+      activeFlowSel.innerHTML = state.flows.map(f=>`<option value="${f.id}" ${f.id===state.activeFlowId?'selected':''}>${f.name}</option>`).join('');
+    }
+
+    function placeCall(){
+      if(state.call.status!=='idle' && state.call.status!=='ended'){ toast('Already calling'); return; }
+      const number = numInput.value.trim() || '1800123456';
+      numEl.textContent = number; state.call.number = number;
+      status('dialing'); log('Dialing '+number+'…');
+      startTimer();
+
+      setTimeout(()=>{
+        status('ringing'); log('Ringing… (5s)'); ringStart();
+        state.call.ringTimeout = setTimeout(()=>{
+          // Proceed to IVR
+          const flow = state.flows.find(x=>x.id===state.activeFlowId);
+          status('ivr'); log('IVR: '+(flow?flow.ivrText:'(no flow)')+' (waiting 8s for DTMF)');
+          waitForIVRInput(flow);
+        }, 5000);
+      }, 600);
+    }
+
+    function hangup(){
+      clearTimeout(state.call.ringTimeout);
+      clearTimeout(state.call.ivrTimeout);
+      status('ended'); log('Call ended.'); resetTimer(); state.dtmfBuffer = [];
+      dtmfEcho.innerHTML = '';
+      setTimeout(()=>{ status('idle'); }, 400);
+    }
+
+    function waitForIVRInput(flow){
+      // 8s timeout → busy
+      state.call.ivrTimeout = setTimeout(()=>{
+        status('busy'); log('No input — busy tone'); busyTone();
+        setTimeout(()=>hangup(), 1500);
+      }, 8000);
+
+      // DTMF handling while in IVR
+    }
+
+    // keypad
+    const pad = document.getElementById('pad');
+    const keys = ['1','2','3','4','5','6','7','8','9','*','0','#'];
+    keys.forEach(k=>{
+      const el = document.createElement('div'); el.className='key'; el.textContent=k;
+      el.onclick = ()=> pressDTMF(k);
+      pad.appendChild(el);
+    });
+
+    function pressDTMF(k){
+      dtmf(k);
+      // echo
+      const b = document.createElement('span'); b.className='kbd'; b.textContent=k;
+      dtmfEcho.appendChild(b);
+
+      // feed IVR
+      if(state.call.status==='ivr'){
+        clearTimeout(state.call.ivrTimeout);
+        const f = state.flows.find(x=>x.id===state.activeFlowId);
+        const branch = f?.branches?.[k];
+        if(branch){
+          status('in-call'); log(`Selected ${k}: ${branch} → connecting agent…`);
+          // connect after small delay
+          setTimeout(()=>{ log('Agent connected. You can simulate conversation.'); }, 800);
+        }else if(k==='9'){
+          log('Repeat menu: '+f.ivrText); waitForIVRInput(f);
+        }else{
+          log('Invalid choice. Repeat menu.'); waitForIVRInput(f);
+        }
+      }
+    }
+
+    document.getElementById('callBtn').onclick = placeCall;
+    document.getElementById('hangBtn').onclick = hangup;
+
+    function openRight(){ if(!state.rightOpen){ toggleRight(); } }
+
+    // ---------- Top quick actions ----------
+    document.getElementById('quickNewAgent').onclick = newAgent;
+    document.getElementById('quickTemplates').onclick = ()=>{ document.getElementById('browseTemplates').click(); };
+    document.getElementById('quickVoices').onclick = ()=>{ voicesTab='all'; renderVoices(); toast('Voices opened'); };
+
+    document.getElementById('browseTemplates').onclick = ()=>{
+      centerWelcome.style.display='none'; centerPane.style.display='block';
+      centerPane.innerHTML = `
+        <div class="card">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div class="title">Eburon CSR Templates (20)</div>
+            <span class="small">Click a template to edit/apply</span>
+          </div>
+          <div class="divider"></div>
+          <div class="grid g3" id="tmplGrid"></div>
+        </div>`;
+      const grid = document.getElementById('tmplGrid');
+      state.templates.forEach(t=>{
+        const a = document.createElement('div');
+        a.className='action';
+        a.innerHTML = `<div style="font-weight:700">${t.name}</div><div class="small">${t.industry} • ${t.tone}</div>`;
+        a.onclick = ()=> openTemplateEditor(t.id);
+        grid.appendChild(a);
+      });
+    };
+
+    function newAgent(){
+      const id = 'agent-' + Math.random().toString(36).slice(2,8);
+      state.agents.unshift({id, name:'New Agent', role:'CSR', description:'', voice:'Eburon Voice 01', status:'Draft'});
+      renderAgents(); openAgentEditor(id); toast('New agent created');
+    }
+
+    // ---------- Left tabs: Voices ----------
+    document.getElementById('tabAllVoices').onclick = ()=>{ voicesTab='all'; renderVoices(); };
+    document.getElementById('tabMyVoices').onclick = ()=>{ voicesTab='mine'; renderVoices(); };
+    function playVoiceSample(id){
+      // Demo only: tone blip
+      tone(660,0.08); setTimeout(()=>tone(880,0.1),120);
+      toast('Playing sample ('+id+')');
+    }
+
+    // ---------- Active flow select in Dialer ----------
+    function refreshFlowSelectAndUI(){
+      refreshActiveFlowSelect();
+      renderFlows();
+    }
+
+    // ---------- Publish (topbar) ----------
+    document.getElementById('publishBtn').onclick = ()=>{
+      const a = state.agents[0];
+      a.name = document.getElementById('personaName').value || a.name;
+      a.role = document.getElementById('personaRole').value || a.role;
+      a.voice = document.getElementById('personaVoice').value || a.voice;
+      a.status = 'Published';
+      renderAgents();
+      toast('Published: ' + a.name);
+    };
+
+    // ---------- Layout Toggles (the 4 requested "drawings" as live states) ----------
+    const appShell = document.getElementById('app');
+    const leftPane = document.getElementById('left');
+    const rightPane = document.getElementById('right');
+
+    function applyLayout(){
+      appShell.classList.remove('collapsed-left','collapsed-right','collapsed-both');
+      leftPane.classList.remove('hidden'); rightPane.classList.remove('hidden');
+      if(!state.leftOpen && !state.rightOpen){ appShell.classList.add('collapsed-both'); leftPane.classList.add('hidden'); rightPane.classList.add('hidden'); }
+      else if(!state.leftOpen){ appShell.classList.add('collapsed-left'); leftPane.classList.add('hidden'); }
+      else if(!state.rightOpen){ appShell.classList.add('collapsed-right'); rightPane.classList.add('hidden'); }
+    }
+    function toggleLeft(){ state.leftOpen = !state.leftOpen; applyLayout(); }
+    function toggleRight(){ state.rightOpen = !state.rightOpen; applyLayout(); }
+
+    document.getElementById('toggleLeft').onclick = ()=>{ state.leftOpen = !state.leftOpen; applyLayout(); highlightToggle('toggleLeft'); };
+    document.getElementById('toggleRight').onclick = ()=>{ state.rightOpen = !state.rightOpen; applyLayout(); highlightToggle('toggleRight'); };
+    document.getElementById('toggleBoth').onclick = ()=>{ state.leftOpen=false; state.rightOpen=false; applyLayout(); highlightToggle('toggleBoth'); };
+    document.getElementById('toggleNone').onclick = ()=>{ state.leftOpen=true; state.rightOpen=true; applyLayout(); highlightToggle('toggleNone'); };
+
+    function highlightToggle(id){
+      ['toggleLeft','toggleRight','toggleBoth','toggleNone'].forEach(k=>{
+        document.getElementById(k).classList.toggle('active', k===id);
+      });
+    }
+
+    // ---------- Utilities ----------
+    function toast(text){
+      const t = document.createElement('div');
+      t.textContent = text;
+      t.style.position='fixed'; t.style.right='12px'; t.style.bottom='12px';
+      t.style.background='#0b1118'; t.style.border='1px solid #1a2432'; t.style.padding='.5rem .7rem'; t.style.borderRadius='.6rem';
+      t.style.color='#cfe3ff'; t.style.boxShadow='0 10px 30px rgba(0,0,0,.35)';
+      document.body.appendChild(t); setTimeout(()=>t.remove(), 1800);
+    }
+
+    // ---------- Init ----------
+    (function init(){
+      refreshPersonaVoices();
+      renderAgents();
+      renderTemplates();
+      renderVoices();
+      refreshFlowSelectAndUI();
+      applyLayout();
+      log('Dialer ready.');
+      // Keyboard DTMF
+      window.addEventListener('keydown', (e)=>{
+        if(['1','2','3','4','5','6','7','8','9','0','*','#'].includes(e.key)){
+          pressDTMF(e.key);
+        }
+      });
+    })();
+
+  </script>
+</body>
+</html>
